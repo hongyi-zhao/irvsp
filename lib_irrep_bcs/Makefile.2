@@ -1,0 +1,23 @@
+# Please run the following command before make
+# echo "export IRVSPDATA="`pwd` >> ~/.bashrc
+
+#include ../Makefile
+include Makefile
+OBJS = lib_comms.o lib_bilbao.o lib_chrct.o lib_dump.o invreal33.o invmati.o addsign.o lib_kgroup.o raxis.o su2op.o eulang.o 
+
+OFLAG = 
+
+OBJSLIB = irrep_bcs.o
+
+LIBRARY = irrep_bcs.a
+
+libs: $(LIBRARY)
+
+$(LIBRARY) : $(OBJS) $(OBJSLIB)
+	$(AR) $(ARFLAGS) $(LIBRARY) $(OBJSLIB) $(OBJS)
+
+$(OBJS):%.o:%.f90
+	$(F90) -c $(FLAGS) -DIRVSPDATA $*.f90
+
+$(OBJSLIB):%.o:%.f90
+	$(F90) -c $(OFLAG) $(FLAGS)  $*.f90 

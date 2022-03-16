@@ -1,0 +1,25 @@
+SYSTEM   = Bi2Se3
+
+ISTART   = 1
+ICHARG   =11
+
+IALGO = 38
+EDIFF    = 1E-7
+#EDIFFG = 1E-6
+LREAL    = False 
+ENCUT    = 500
+#NBANDS= 70
+
+ISMEAR   = 0 
+SIGMA    = 0.05
+
+#spin orbit coupling
+LSORBIT =.TRUE.
+#SAXIS = 0 0 1
+#ISPIN    = 2
+MAGMOM = 100*0.0
+
+LORBIT    = 11
+LWAVE    = .TRUE.
+LMAXMIX   = 4
+NPAR = 4

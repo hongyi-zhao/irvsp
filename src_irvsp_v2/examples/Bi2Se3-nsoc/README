@@ -1,0 +1,7 @@
+Calculation Process:
+
+1. Prepare POTCAR file : Bi Se
+
+2. Do first principles calculations using VASP
+
+3. ../../irvsp -sg 166 > outir

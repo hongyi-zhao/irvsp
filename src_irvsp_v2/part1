@@ -1,0 +1,172 @@
+!=========================================================================!
+! project : character tables for nonsymmorphic space groups
+! history : 07/18/2014
+! authors : Zhijun Wang  ( zjwang11@hotmail.com )
+! purpose : find symmetry for a certain k point
+! status  : robust
+! comment : These programs are distributed in the hope that they will be 
+!           useful, but WITHOUT ANY WARRANTY; without even the implied 
+!           warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE
+!=========================================================================!
+module nonsymm
+implicit none
+private
+
+      integer ,    parameter  :: MAXDG  = 16
+      integer ,    parameter  :: MAXIRDG=  4
+      integer ,    parameter  :: FLMAX  =  4
+      integer ,    parameter  :: MAXIR  = 48
+      integer ,    parameter  :: NSYM   = 96
+      
+      integer ,    parameter  ::     dp = 8
+      
+      real(dp),    parameter  :: TOLDG  = 2.E-3
+      real(dp),    parameter  :: PI     = 3.141592653589793238462643383279_DP
+      
+      real(dp),    parameter  :: epsil  = 0.0000001_dp
+      
+      complex(dp), parameter  :: czero=(0._dp,0._dp),cone=(1._dp,0._dp)
+      
+      integer     :: DoubNum            ! the number of elements in the double space group
+      integer     :: SymElemR(3,3,NSYM) ! the R part of the symmetry operators {R|t}
+      real(dp)    :: SymElemt(3,NSYM)   ! the t part of the symmetry operators {R|t}
+      complex(dp) :: SymElemS(2,2,NSYM) ! the SU2 symmetry operators {S}
+      
+      !---------irreps of little groups
+      integer      , parameter  ::                          ktypes=40
+      real(dp)     , save       ::                samplek(3,ktypes) ! Coordinates 
+      character*2  , save       ::            samplekname  (ktypes) ! stardand name
+      integer      , save       ::                  nirreps(ktypes) ! Number of Irreps for little groups
+      integer      , save       ::                  sirreps(ktypes) ! Number of Irreps for single little groups
+      integer      , save       ::                  antisym(ktypes) ! the existance of antiunitary symmetrys
+      character*5  , save       ::        Irrepsname (MAXIR,ktypes) ! Names of Irreps
+      integer      , save       ::        Herringrule(MAXIR,ktypes) ! reality of Irreps
+          !  \delta(A^2)= 1,     equivalent, real    ! trival for      integer spin
+          !  \delta(A^2)=-1,     equivalent, complex ! trival for half-integer spin
+          !  \delta(A^2)= 0, not equivalent, pair with itself.
+      integer      , save       ::           nelelittle    (ktypes) ! Number of elements in litte groups
+      integer      , save       ::      labels(2,NSYM,MAXIR,ktypes)
+          !  the first label can take two values: 0 whern the symmetry element does
+          !          NOT belong to the little group or 1, when it does belong to it.
+          !  the second label can take two values: 1 if the phase does not contain
+          !  the u,v,w parameters or 2 if the phase does contain at least one of them.
+      complex(dp)  , save       ::   tableTraces(NSYM,MAXIR,ktypes) ! for comparison
+      complex(dp)  , save       ::   chartTraces(NSYM,MAXIR,ktypes)
+      real(dp)     , save       ::   coeff_uvw(3,NSYM,MAXIR,ktypes)
+      character*12 , save       ::   factsTraces(NSYM,MAXIR,ktypes)
+
+      integer      , save       ::   nktp ! the number of k types in the files
+      character*15 , save       ::   chkpoint(ktypes) 
+      character*10 , save       ::   spacegroupsymbol
+      
+      ! 1/2   ->  0.5
+      ! 1/3   ->  0.333333
+      ! u     ->  0.123  : su
+      ! v     ->  0.313  : sv
+      ! w     ->  0.427  : sw
+      ! 1 - u ->  0.877  : s1_u
+      ! -2 u  -> -0.246  : s_2u
+      ! -u    -> -0.123  : s_u
+      ! 1 + u ->  1.123  : s1u
+      ! 1 - v ->  0.687  : s1_v
+      !------------codes for u,v,w
+      real(dp),    parameter  :: su=0.123_dp,s1_u=0.877_dp,s_2u=-0.246_dp
+      real(dp),    parameter  :: sv=0.313_dp,s1_v=0.687_dp
+      real(dp),    parameter  :: sw=0.427_dp,s_u=-0.123_dp,s1u = 1.123_dp
+      
+      real(dp),     save      :: Kc2p(3,3),p2cR(3,3)
+      
+      real(dp),    parameter  :: ds1=1._dp/sqrt(3._dp), ds2=0.5_dp/sqrt(3._dp)
+      real(dp),    parameter  :: inv3=1._dp/3._dp,dinv3=2._dp/3._dp
+      real(dp),    parameter  :: Pabc(3,3) = RESHAPE( &
+                  (/  1.00000 ,  0.00000 ,  0.00000   &
+                    , 0.00000 ,  1.00000 ,  0.00000   &
+                    , 0.00000 ,  0.00000 ,  1.00000/) &
+                    ,(/3,3/) )
+      real(dp),    parameter  :: Cabc(3,3) = RESHAPE( &
+                  (/  0.50000 , -0.50000 ,  0.00000   &
+                    , 0.50000 ,  0.50000 ,  0.00000   &
+                    , 0.00000 ,  0.00000 ,  1.00000/) &
+                    ,(/3,3/) )
+      real(dp),    parameter  :: Babc(3,3) = RESHAPE( &
+!   SG#5, #8, #9, #12, #15.
+                  (/  0.50000 ,  0.50000 ,  0.00000   &
+                    ,-0.50000 ,  0.50000 ,  0.00000   &
+                    , 0.00000 ,  0.00000 ,  1.00000/) &
+                    ,(/3,3/) )
+!     real(dp),    parameter  :: Aabc(3,3) = RESHAPE( &
+!   SG#38-41.
+!                 (/  0.00000 , -0.50000 , -0.50000   &
+!                   , 0.00000 ,  0.50000 , -0.50000   &
+!                   , 1.00000 ,  0.00000 ,  0.00000/) &
+!                   ,(/3,3/) )
+      real(dp),    parameter  :: Aabc(3,3) = RESHAPE( &
+!   SG#38-41.
+                  (/  1.00000 ,  0.00000 ,  0.00000   &
+                    , 0.00000 ,  0.50000 ,  0.50000   &
+                    , 0.00000 , -0.50000 ,  0.50000/) &
+                    ,(/3,3/) )
+     !real(dp),    parameter  :: Rabc(3,3) = RESHAPE( &
+     !            (/    ds2   , -0.500_dp,   inv3     &
+     !              ,   ds2   ,  0.500_dp,   inv3     &
+     !              ,  -ds1   ,  0.000_dp,   inv3  /) &
+     !              ,(/3,3/) )
+      real(dp),    parameter  :: Rabc(3,3) = RESHAPE( &
+                  (/  dinv3   ,  inv3    ,   inv3     &
+                    , -inv3   ,  inv3    ,   inv3     &
+                    , -inv3   ,-dinv3    ,   inv3  /) &
+                    ,(/3,3/) )
+      real(dp),    parameter  :: Fabc(3,3) = RESHAPE( &
+                  (/  0.00000 ,  0.50000 ,  0.50000   &
+                    , 0.50000 ,  0.00000 ,  0.50000   &
+                    , 0.50000 ,  0.50000 ,  0.00000/) &
+                    ,(/3,3/) )
+      real(dp),    parameter  :: Iabc(3,3) = RESHAPE( &
+                  (/ -0.50000 ,  0.50000 ,  0.50000   &
+                    , 0.50000 , -0.50000 ,  0.50000   &
+                    , 0.50000 ,  0.50000 , -0.50000/) &
+                    ,(/3,3/) )
+!
+      public :: mpntgrp
+      public :: dumptableofIrs
+      public :: getkid
+      public :: wrtirb
+!
+CONTAINS
+
+      SUBROUTINE MPNTGRP(IORD,IZ,IIZ,TAU,DZ2,SU2,sgn)
+      integer  , intent(in)    ::    IORD
+      integer  , intent(inout) ::    IZ(3,3,NSYM), IIZ(3,3,NSYM)
+      real(dp) , intent(inout) ::    TAU(3,NSYM)
+      real(dp) , intent(inout) ::    DZ2(3,3,NSYM)
+      complex(dp),intent(inout)::    SU2(2,2,NSYM)        
+      integer  , intent(in)    ::    sgn
+
+      integer       ::    IZt(3,3,IORD), IIZt(3,3,IORD)
+      real(dp)      ::    TAUt(3,IORD)
+      real(dp)      ::    DZ2t(3,3,IORD)
+      complex(dp)   ::    SU2t(2,2,IORD)
+
+      integer       ::    series(NSYM)
+      real(dp)      ::    dr(3),DTEST,tmp33(3,3)
+      integer       ::    Numk,antiss,tnir,wi
+
+      character*1   ::    tag1 
+      character*3   ::    tag3, csgn
+      character*30  ::    TabIrrepName
+      character*40  ::    ListIrrep 
+      integer       ::    i,j,k,ierr,itmp,jtmp
+      real(dp)      ::    Df(2,4),abcde(5)
+      real(dp)      ::    ktmp(3),ttmp(1,3)
+      character*5   ::    irtmp
+      character*2   ::    nametmp,nametmp2
+      character*15  ::    ckpoint
+      integer       ::    iir,nele,ikt
+
+      CHARACTER(len=180) :: spgpath, spgfile
+
+     !**********************************************************************
+      IF    (sgn<10 ) THEN; write(csgn,'(I1)') sgn
+      ELSEIF(sgn<100) THEN; write(csgn,'(I2)') sgn
+      ELSE                ; write(csgn,'(I3)') sgn
+      ENDIF
