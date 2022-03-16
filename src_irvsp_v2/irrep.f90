@@ -89,8 +89,7 @@
       
 !  
     
-!      注意 irvsp 只有当 KPOINTS 中k点个数少于10个时才会输出trace.txt 文件（可以通过简单修改源码解除该限制）。
-
+!注意 irvsp 只有当 KPOINTS 中k点个数少于10个时才会输出trace.txt 文件（可以通过简单修改源码解除该限制）。
 !werner@X10DAi-00:~/Public/repo/github.com/zjwang11/irvsp.git$ rg '::[ ]*[IJKLMN][^ ]+' | grep -i point | grep -Po '::[ ]*\K[^ ]+'| sort -u |xargs -I{} rg "{}[ ]*(<|\.lt\.)[ ]*10"
 !src_irvsp_v2_release/irrep.f90
 !89:      IF(NKPTS<10) THEN
