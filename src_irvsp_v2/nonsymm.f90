@@ -167,8 +167,11 @@ CONTAINS
       character*15  ::    ckpoint
       integer       ::    iir,nele,ikt
 
+      
       CHARACTER(len=180) :: spgpath, spgfile
-
+      !https://fortran-lang.discourse.group/t/conditional-compilation-based-on-environment-variables/2983/9?u=hongyi
+      INTEGER            :: spgstat
+      
      !**********************************************************************
       IF    (sgn<10 ) THEN; write(csgn,'(I1)') sgn
       ELSEIF(sgn<100) THEN; write(csgn,'(I2)') sgn
@@ -176,8 +179,13 @@ CONTAINS
       ENDIF
       
       
-!https://fortran-lang.discourse.group/t/conditional-compilation-based-on-environment-variables/2983/5?u=hongyi
-call get_environment_variable('IRVSPDATA',spgpath)
+!https://fortran-lang.discourse.group/t/conditional-compilation-based-on-environment-variables/2983/9?u=hongyi
+call get_environment_variable('IRVSPDATA',spgpath,status=spgstat)
+if (spgstat == 1) then
+   write(6,*) "Environment variable 'IRVSPDATA' must be provided."
+   stop
+end if
+
 
       spgfile = TRIM(spgpath)//'/kLittleGroups/kLG_'//TRIM(csgn)//'.data'
       WRITE(*,*) "SPGFILE :", spgfile

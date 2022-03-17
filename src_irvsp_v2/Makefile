@@ -18,9 +18,9 @@ ALL =  $(MOD1) $(MODULES) $(WAVEMD) $(VECT)  $(VECT2)
 #or
 #$ make
 
-ifndef IRVSPDATA
-$(warning Warning - Environment variable 'IRVSPDATA' has not been set.)
-endif
+#ifndef IRVSPDATA
+#$(warning Warning - Environment variable 'IRVSPDATA' has not been set.)
+#endif
 
 default: irvsp
 	
