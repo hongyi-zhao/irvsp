@@ -12,6 +12,16 @@ VECT2= wrtdate.o latgen2.o rmprop.o raxis.o su2op.o eulang.o invmat.o invmati.o 
        wrtir.o trsymb.o
 ALL =  $(MOD1) $(MODULES) $(WAVEMD) $(VECT)  $(VECT2)
 
+#https://fortran-lang.discourse.group/t/conditional-compilation-based-on-environment-variables/2983/5?u=hongyi
+# Run make as follows:
+#$ make IRVSPDATA=$(pwd)
+#or
+#$ make
+
+ifndef IRVSPDATA
+$(warning Warning - Environment variable 'IRVSPDATA' has not been set.)
+endif
+
 default: irvsp
 	
 tar:
@@ -85,7 +95,7 @@ irvsp:$(ALL)
 #上面代码将 src 目录下的 txt 文件，拷贝到 dest 目录下。首先判断 dest 目录是否存在，如果不存在就新建，然后，$< 指代前置文件（src/%.txt）， $@ 指代目标文件（dest/%.txt）。
 
 $(MOD1):%.o:%.f90
-	$(F90) -c $(FLAGS) -fpp -DIRVSPDATA $*.f90
+	$(F90) -c $(FLAGS) -fpp $*.f90
 
 #$(MOD1):part1 part2
 #	cat part1 >  nonsymm.f90

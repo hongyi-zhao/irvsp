@@ -11,9 +11,6 @@
 module nonsymm
 implicit none
 private
-      !https://fortran-lang.discourse.group/t/conditional-compilation-based-on-environment-variables/2983/2?u=hongyi
-      character(len=:), allocatable :: spgpath
-
       integer ,    parameter  :: MAXDG  = 16
       integer ,    parameter  :: MAXIRDG=  4
       integer ,    parameter  :: FLMAX  =  4
@@ -179,28 +176,8 @@ CONTAINS
       ENDIF
       
       
-!https://fortran-lang.discourse.group/t/conditional-compilation-based-on-environment-variables/2983/2?u=hongyi
-!#ifdef IRVSPDATA
-!      call get_environment_variable('IRVSPDATA',spgpath)
-!      !spgpath = '/storagehome/jcgao/soft/irvsp/src_irvsp_v2_zj'
-!#else 
-!      write(6,*) "Environment variable 'IRVSPDATA' must be provided."
-!      write(6,*) "Please run the following commands to make the library:"
-!      write(6,*) "./configure.sh"
-!      write(6,*) "source ~/.bashrc"
-!      write(6,*) "make"
-!      stop
-!#endif 
-
-
-spgpath = get_env('IRVSPDATA')
-if (spgpath == '') then
-   write(6,*) "Environment variable 'IRVSPDATA' must be provided."
-   ! ...
-end if
-
-
-
+!https://fortran-lang.discourse.group/t/conditional-compilation-based-on-environment-variables/2983/5?u=hongyi
+call get_environment_variable('IRVSPDATA',spgpath)
 
       spgfile = TRIM(spgpath)//'/kLittleGroups/kLG_'//TRIM(csgn)//'.data'
       WRITE(*,*) "SPGFILE :", spgfile
