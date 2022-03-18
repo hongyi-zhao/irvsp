@@ -178,7 +178,19 @@ CONTAINS
       ELSE                ; write(csgn,'(I3)') sgn
       ENDIF
       
-      
+
+!https://www.intel.com/content/www/us/en/develop/documentation/fortran-compiler-oneapi-dev-guide-and-reference/top/language-reference/a-to-z-reference/g-1/get-environment-variable.html
+!GET_ENVIRONMENT_VARIABLE
+!Intrinsic Subroutine:
+!Gets the value of an environment variable.
+!CALL GET_ENVIRONMENT_VARIABLE
+!(name[,value,length,status,trim_name,errmsg])
+!status
+!    (Output; optional) Must be a scalar of type integer. If specified, it is assigned a value of 0 if the environment variable exists and either has no value or its value is successfully assigned to value
+!    .
+!    It is assigned a value of -1 if the value
+!    argument is present and has a length less than the significant length of the environment variable value. It is assigned a value of 1 if the environment variable does not exist. For other error conditions, it is assigned a processor-dependent value greater than 2.
+!      
 !https://fortran-lang.discourse.group/t/conditional-compilation-based-on-environment-variables/2983/9?u=hongyi
 call get_environment_variable('IRVSPDATA',spgpath,status=spgstat)
 if (spgstat == 1) then
