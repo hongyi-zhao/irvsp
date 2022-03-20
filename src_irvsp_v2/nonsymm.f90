@@ -207,7 +207,34 @@ end if
       read(11) DoubNum, spacegroupsymbol
       write(9,*)  spacegroupsymbol
 
-      Kc2p=0._dp
+      !https://www.cmt.york.ac.uk/compmag/resources/FortranGuide.pdf
+      ! 3.3 Precision
+      !       So far we have been using what is known as single precision variables; these
+      !       have well defined limits dependent on machine architecture and OS. But what
+      !       happens when you want to represent (as we will) much bigger numbers, with
+      !       much more precision? The answer is to use double precision variables. My
+      !       preffered way of using double precisions is as follows: Declare a double precision
+      !       parameter (dp - one point zero ’d’ zero) and then use this in all other declarations
+      !       by putting the variable name in brackets after variable type:
+      !       integer, parameter :: dp=kind(1.0d0) ! Do this before ANY others
+      !       real(dp) :: a, b ! a and b are now double precision
+      !       NB: There is a rounding error pitfall to watch out for here. If variable ’a’
+      !       is double precision, one must be careful when using it to make use of it being
+      !       double. That is:
+      !       a = 0.0
+      !       May give a to be 0.0000000248192746. The extra precision contains whatever
+      !       was previously in memory. Therefore we can make sure it is double precision
+      !       zero (0.0000000000000000) by appending a dp tag to the end:
+      ! a = 0.0_dp
+      ! Note the underscore and then the dp. For clarity, you may call your DP variable
+      ! anything, for example:
+      ! integer, parameter :: example = kind(1.0d0)
+      ! real(example) :: aVariable
+      ! aVariable = 0.0_example
+      ! Is equivalent to before.
+      ! See: SELECTED_REAL_KIND and SELECTED_INT_KIND for even more precisional control.
+      
+      Kc2p=0.0_dp
       IF(spacegroupsymbol(1:1)=='P')  THEN
         Kc2p=Pabc
       ELSEIF(spacegroupsymbol(1:1)=='C')   THEN
@@ -242,7 +269,7 @@ end if
          !!-----------
       
       SymElemR(:,:,:)=0;SymElemS(2,2,NSYM)=czero
-      Df=0._dp
+      Df=0.0_dp 
       write(9,600)  ' Ri     taui     spin transf.' 
       do i=1,DoubNum
          read(11) SymElemR(:,:,i),SymElemt(:,i),Df(:,:)
@@ -252,7 +279,7 @@ end if
          SymElemS(2,2,i)=cmplx(Df(1,4)*dcos(PI*Df(2,4)),Df(1,4)*dsin(PI*Df(2,4)),dp)
       enddo
 
-      tmp33(:,:)=0._dp
+      tmp33(:,:)=0.0_dp
       do i=1,DoubNum/2
          write(9,601) i, SymElemR(:,1,i), SymElemt(1,i)
          write(9,602)    SymElemR(:,2,i), SymElemt(2,i), SymElemS(1,1,i), SymElemS(1,2,i)
@@ -262,7 +289,7 @@ end if
          SymElemR(:,:,i)=  nint(matmul(matmul(p2cR(:,:), tmp33(:,:) ),Kc2p(:,:)))
          SymElemt(:,i  )=matmul(p2cR,SymElemt(:,i))
         !-- conventional cell -> primitive cell  by zjwang 11.7.2016
-      enddo 
+      enddo
 
       !do i = 1, IORD
       !  write(*,*) SymElemR(:,:,i)
@@ -283,7 +310,7 @@ end if
        .and. tmp33(1,3)==SymElemR(1,3,i).and.tmp33(2,3)==SymElemR(2,3,i).and.tmp33(3,3)==SymElemR(3,3,i) ) THEN
           series(i)=j; EXIT
           ENDIF
-       ENDDO    
+       ENDDO
           DR(:)=SymElemt(:,i)-TAU(:,j)
           DTEST=DABS(NINT(DR(1))-DR(1))   &
                +DABS(NINT(DR(2))-DR(2))   &
@@ -572,7 +599,7 @@ end if
          if (ind_v(ikt).ne.0) num_var_tmp = num_var_tmp+1
          if (ind_w(ikt).ne.0) num_var_tmp = num_var_tmp+1
          num_var(ikt) = num_var_tmp 
-      enddo 
+      enddo
      !write(*,*) "Number of variables for the reference kpoints"
      !write(*,"(15I3)") num_var
 
@@ -603,7 +630,7 @@ end if
             if(ckpoint(ikt)(11:15)=='-2u  ') refkpoint(3) = -2d0*refkpoint(1)
             if(ckpoint(ikt)(11:15)==' -u  ') refkpoint(3) = -refkpoint(1)
             if(ckpoint(ikt)(11:15)==' 1+u ') refkpoint(3) = 1d0+refkpoint(1)
-         endif 
+         endif
          if(ckpoint(ikt)(6:10)=='  v  ') then 
             is_variable(2) = .true.
             uvw_tmp(2) = tkkc(2)
@@ -611,12 +638,12 @@ end if
             if (ckpoint(ikt)(1:5)==' 1-v ') refkpoint(1) = 1d0-refkpoint(2)
             if (ckpoint(ikt)(11:15)==' 1-v ') refkpoint(3) = 1d0-refkpoint(2)
             if (ckpoint(ikt)(11:15)=='  v  ') refkpoint(3) = refkpoint(2)
-         endif 
+         endif
          if(ckpoint(ikt)(11:15)=='  w  ') then 
              is_variable(3) = .true.
              uvw_tmp(3) = tkkc(3)
              refkpoint(3) = tkkc(3)
-         endif 
+         endif
 
          ! some exceptions
          ! 0.5 u 0.0  : 195 198 200 201 205
@@ -625,13 +652,13 @@ end if
             is_variable(1) = .true.
             uvw_tmp(1) = tkkc(2)
             refkpoint(2) = tkkc(2)
-         endif 
+         endif
          if(ckpoint(ikt)(1:5).eq.' 1+u '.and.ckpoint(ikt)(6:10).eq.' 1-u ') then 
             is_variable(1) = .true.
             uvw_tmp(1) = tkkc(1) - 1
             refkpoint(1) = tkkc(1)
             refkpoint(2) = 2-refkpoint(1)
-         endif 
+         endif
          ! end exceptions
          
          do j = 1,3
@@ -639,8 +666,8 @@ end if
                chr_tmp = adjustr(ckpoint(ikt)((j-1)*5+1:j*5))
                read(chr_tmp, *) refkpoint(j)
                if (abs(refkpoint(j)-0.33) < tol) refkpoint(j) = 1d0/3d0
-            endif 
-         enddo 
+            endif
+         enddo
 
          refkpointp = matmul(refkpoint,kc2p)
 
@@ -661,11 +688,11 @@ end if
                  uvw = 0d0
                  do j = 1, 3
                     if(is_variable(j)) uvw(j) = uvw_tmp(j)
-                 enddo 
-             endif 
-         endif 
+                 enddo
+             endif
+         endif
 
-      enddo 
+      enddo
       ivar= num_var(ik)
      !write(*,*) "The id of reference kpoint for the input kpoint is:", ik,num_var(ik)
      !write(*,"(A10,3F12.6)") "uvw(:)=",uvw(:)
@@ -848,7 +875,7 @@ end if
 
       IF(ND<10) THEN; write(CHND,'(A1,I1,A3)') '(',ND,'); '
       ELSE          ; write(CHND,'(A1,I2,A2)') '(',ND,');'
-      ENDIF 
+      ENDIF
       LCNB=LCNB+ND
 !.....if 'Cornwell condition' is NOT satisfied
 !
@@ -1004,7 +1031,7 @@ end if
       IF(LCNB<10) THEN; write(CHND,'(A1,I1,A3)') '[',LCNB,']  '
       ELSEIF(LCNB<100) THEN; write(CHND,'(A1,I2,A2)') '[',LCNB,'] '
       ELSE            ; write(CHND,'(A1,I3,A1)') '[',LCNB,']'
-      ENDIF 
+      ENDIF
        WRITE(66,"(A5,$)") CHND
 
       RETURN
