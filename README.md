@@ -65,7 +65,7 @@ the associated library can be linked to by various DFT packages, such as VASP, Q
 * solve eBR/aBR (* using tqc.data *)
 
 # Notice
-```
+```shell
 $ git remote add zjwang11 https://github.com/zjwang11/irvsp.git
 $ git fetch zjwang11
 # First check and confirm:
