@@ -65,6 +65,13 @@ the associated library can be linked to by various DFT packages, such as VASP, Q
 * solve eBR/aBR (* using tqc.data *)
 
 # Notice
+```
+$ git remote add zjwang11 https://github.com/zjwang11/irvsp.git
+$ git fetch zjwang11
+# First check and confirm:
+$ git log zjwang11/master -3
+$ git cherry-pick  zjwang11/master -3
+```
 * For SOC calculations, please set the MAGMOM tag explicitly in INCAR (for example MAGMOM=9000\*0). The default value of MAGMOM could cause an error when using irvsp.
 * For magnetic calculations, please refer to http://tm.iphy.ac.cn/TopMat_1651msg.html
 * Do NOT set ISYM tag in INCAR.
