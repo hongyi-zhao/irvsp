@@ -76,6 +76,5 @@ $ git remote add zjwang11 https://github.com/zjwang11/irvsp.git
 $ git fetch zjwang11
 # First check and confirm:
 $ git log zjwang11/master -3
-$ git cherry-pick  zjwang11/master -3
+$ git cherry-pick zjwang11/master -3
 ```
-
